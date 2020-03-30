@@ -1,33 +1,64 @@
-program daxpy
-  integer,parameter :: n = 10
-  integer :: incx, incy
-  real*8,save :: alpha, x(n), y(n)
-
-  call Daxpy(n, alpha, x, incx, y, incy)
-  print *, "this is the result", y
-end program 
-  
-subroutine Daxpy(n, alpha, x, incx, y, incy)
+program DaxpyProgram
   implicit none
-  integer :: n, incx, incy
-  double precision :: alpha, x(n), y(n)
-  double precision :: i, ix, iy 
+  real, dimension(:,:), allocatable :: x,y
+  integer i, j
 
-  if ((incx == 1) .and. (incy == 1)) then
-      do i=1,n
-        y(i) = alpha*x(i) + y(i)
+
+interface 
+  subroutine daxpy(x,y)
+    real, dimension(:,:), intent(in) :: x
+    real, dimension(:,:), intent(out) :: y
+  end subroutine 
+
+end interface
+
+
+  allocate (x(10,10))
+  allocate (y(10,10))
+
+do i = 1,10
+  do j = 1,10
+    x(i,j) = (10.2*i)
+    y(i,j) = 10.2
+  end do
+end do
+
+call daxpy(x,y)
+print *,' Result: '
+
+do i = 1,10
+  do j = 1,10
+    print *, 'Matrix(',i,',',j,')=',y(i,j)
+  end do
+end do
+
+deallocate(x(10,10))
+deallocate(y(10,10))
+
+end program DaxpyProgram
+
+subroutine daxpy(x,y)
+  implicit none
+  real, dimension(:,:), intent(in) :: x
+  real, dimension(:,:), intent(out) :: y
+
+  integer :: n 
+  real :: alpha,ix,iy
+  integer :: incx, incy, i, j
+
+  n = 10
+  alpha = 4.0
+  incx = 1
+  incy = 1
+  i = 0
+
+  if ((incx == 1) .and. (incy == 1)) then 
+    do i = 1,n
+      do j = 1,n
+        y(i,j) = alpha*x(i,j) + y(i,j)
       end do
-  else
-      ix = 1
-      iy = 1
-      
-      do i=1,n
-        ix = 1+(i-1)*incx
-        iy = 1+(i-1)*incy
-        y(iy) = a*x(ix)+y(iy)
-      end do
+    end do
   end if 
-  return
-     
-end subroutine 
+ return
+end subroutine
 
