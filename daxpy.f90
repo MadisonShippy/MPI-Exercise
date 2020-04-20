@@ -2,8 +2,7 @@ program DaxpyProgram
   implicit none
   real, dimension(:,:), allocatable :: x,y
   integer i, j
-
-
+  real time_begin, time_end
 interface 
   subroutine daxpy(x,y)
     real, dimension(:,:), intent(in) :: x
@@ -12,9 +11,9 @@ interface
 
 end interface
 
-
   allocate (x(10,10))
   allocate (y(10,10))
+call CPU_TIME(time_begin)
 
 do i = 1,10
   do j = 1,10
@@ -28,12 +27,15 @@ print *,' Result: '
 
 do i = 1,10
   do j = 1,10
-    print *, 'Matrix(',i,',',j,')=',y(i,j)
+    write (*,*) 'Matrix(',i,',',j,')=',y(i,j)
   end do
 end do
 
-deallocate(x(10,10))
-deallocate(y(10,10))
+call CPU_TIME(time_end)
+write (*,*) 'time of operation: ', time_end - time_begin, 's'
+
+deallocate(x)
+deallocate(y)
 
 end program DaxpyProgram
 
