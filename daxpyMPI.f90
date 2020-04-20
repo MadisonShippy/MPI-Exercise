@@ -2,7 +2,7 @@ program DaxpyProgram
   implicit none
   include 'mpif.h'
   real, dimension(:,:), allocatable :: x, y, z, xpart, ypart, zpart
-  integer alpha, n, i, ops, procSize, rank
+  integer alpha, n, i, ops, p, rank
   real :: start, finish
   
   !initialize variables to test
