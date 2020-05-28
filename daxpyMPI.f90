@@ -1,15 +1,15 @@
 program DaxpyProgram
   implicit none
   include 'mpif.h'
-  real, dimension(:), allocatable :: x, y, z, xpart, ypart, zpart
+  real, dimension(:), allocatable :: x, y, z, xpart, ypart, zpart, tempx, tempy, tempz
   integer alpha, n, i, ops, p, rank, error, iy
-  real :: start, finish
+  real :: begin, finish, start, done
   
   !initialize variables to test
   i = 0
-  n = 2048
+  n = 50
   alpha = 4
-
+  
   call MPI_INIT(error)
   call MPI_COMM_SIZE(MPI_COMM_WORLD, p, error)
   call MPI_COMM_RANK(MPI_COMM_WORLD, rank, error)
@@ -22,74 +22,72 @@ program DaxpyProgram
     ops = n/p
   endif
 
-if(rank.eq.0) then
+  start = (rank*ops)+1
+  done = (rank+1)*ops
+
   print *, 'operations: ', ops
   allocate(x(n))
   allocate(y(n))
   allocate(z(n)) 
- endif 
-
   allocate(xpart(ops))
   allocate(ypart(ops))
   allocate(zpart(ops))
   
-if (rank.eq.0) then
   do i = 1, n
     x(i) = 10.2 *i
     y(i) = 10.2
     z(i) = 10.2
   enddo
-endif
 
-do i = 1,ops
-  xpart(i) = 10.2*i
-  ypart(i) = 10.2
-  zpart(i) = 10.2
-enddo
+  do i = 1,ops
+    xpart(i) = 10.2*i
+    ypart(i) = 10.2
+    zpart(i) = 10.2
+  enddo
 
-if(rank.eq.0)then
-call MPI_Scatter(x, ops, MPI_REAL, xpart, ops, MPI_REAL, 0, MPI_COMM_WORLD, error)
-call MPI_Scatter(y, ops, MPI_REAL, ypart, ops, MPI_REAL, 0, MPI_COMM_WORLD, error)
-call MPI_Scatter(z, ops, MPI_REAL, zpart, ops, MPI_REAL, 0, MPI_COMM_WORLD, error)
-endif
-print *, 'got to process',rank
-
-
-if(rank.eq.0)then
-call CPU_TIME(start)
-endif
-
-do iy = 1, ops
-   if(ops*rank+iy + n) then
-      zpart(iy)=alpha*xpart(iy) + ypart(iy)
+  print *, 'got to process',rank
+  
+  xpart = x((rank*ops)+1:(rank+1)*ops)
+  ypart = y((rank*ops)+1:(rank+1)*ops)
+  zpart = z((rank*ops)+1:(rank+1)*ops)
+  
+  if(rank.eq.0)then
+    call CPU_TIME(begin)
   endif
-enddo
 
-call MPI_GATHER(zpart, ops, MPI_REAL, z, ops, MPI_REAL, 0, MPI_COMM_WORLD, error)
+  do iy = 1, ops
+    if(ops*rank+iy <=  n) then
+      zpart(iy)=alpha*xpart(iy) + ypart(iy)
+    endif
+  enddo
 
-if (rank.eq.0) then
-  do i = 1,n
-    print *, z(i)
-  end do
-end if
+  x((rank*ops)+1:(rank+1)*ops) = xpart
+  y((rank*ops)+1:(rank+1)*ops) = ypart
+  z((rank*ops)+1:(rank+1)*ops) = zpart
+ 
+  if(rank.eq.0) then
+    do i = 1,n
+      print *, z(i)
+    end do
+  end if
 
-if(rank.eq.0)then
-call CPU_TIME(finish)
-endif 
+  if(rank.eq.0)then
+    call CPU_TIME(finish)
+  endif
 
-if(rank.eq.0)then
-write (*,*) 'time of operation: ', finish-start, 's'
-endif
+  if(rank.eq.0)then
+    write (*,*) 'time of operation: ', finish-start, 's'
+  endif
 
-deallocate(x)
-deallocate(y)
-deallocate(z)
-deallocate(xpart)
-deallocate(ypart)
-deallocate(zpart)
-
-
-print *, 'exiting on process: ', rank
-
-call MPI_Finalize(error)
+  deallocate(x)
+  deallocate(y)
+  deallocate(z)
+  deallocate(xpart)
+  deallocate(ypart)
+  deallocate(zpart)
+  
+  if(rank.eq.0)then
+    print *, 'exiting on process: ', rank
+  endif
+  call MPI_Finalize(error)
 end program
